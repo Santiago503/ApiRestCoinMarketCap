@@ -26,15 +26,18 @@ namespace ApiRestCoinMarketCap.Controllers
 
         [HttpGet]
         [Route("quotes")]
-        public async Task<ActionResult<CryptoCoin>> GetQuotes(string symbol = "BTC,ETH,BNB,USDT,ADA ")
+        public async Task<ActionResult<CryptoCoin>> GetQuotes([FromQuery] string symbol = "BTC,ETH,BNB,USDT,ADA")
         {
             try
             {
                 symbol = ClearParamsSymbol(symbol);
-
+                if (string.IsNullOrEmpty(symbol))
+                {
+                    symbol = "BTC,ETH,BNB,USDT,ADA";
+                }
                 return await GetCryptoQuotes(symbol);
             }
-            catch (Exception ex)
+            catch (WebException ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -42,11 +45,52 @@ namespace ApiRestCoinMarketCap.Controllers
 
         [HttpGet]
         [Route("convert-crypto")]
-        public async Task<ActionResult<CryptoCoinConvert>> GetConvertCrypto([FromQuery] ParamConvertCrypto param)
+        public async Task<ActionResult<CryptoDataConvert>> GetConvertCrypto([FromQuery] ParamConvertCrypto param)
         {
             try
             {
-                return await GetCryptoConvertQuotes(param);
+                //Limpiar Parametros
+                param.convert = ClearParamsSymbol(param.convert);
+
+                if (string.IsNullOrEmpty(param.convert))
+                {
+                    param.convert = "USD";
+                }
+                var alltoConvert = param.convert.Split(",");
+
+                List<Currency> dataCryptoQuotes = new List<Currency>();
+                CryptoCoinConvert cryptoCoinConvertOne = new CryptoCoinConvert();
+
+                foreach (var item in alltoConvert)
+                {
+                    param.convert = item;
+                    cryptoCoinConvertOne = await GetCryptoConvertQuotes(param);
+                    
+                    var key = cryptoCoinConvertOne.data.quote.Keys.First();
+
+                    //Convertiendo Objeto en Array
+                    Currency currency = new Currency()
+                    {
+                        name    = key,
+                        price   = cryptoCoinConvertOne.data.quote[key].price,
+                        last_updated = cryptoCoinConvertOne.data.quote[key].last_updated
+                    };
+
+                    dataCryptoQuotes.Add(currency);
+                }
+
+                CryptoDataConvert dataConvert = new CryptoDataConvert()
+                {
+                    id      = cryptoCoinConvertOne.data.id,
+                    name    = cryptoCoinConvertOne.data.name,
+                    symbol  = cryptoCoinConvertOne.data.symbol,
+                    slug    = cryptoCoinConvertOne.data.slug,
+                    amount  = cryptoCoinConvertOne.data.amount,
+                    last_updated   = cryptoCoinConvertOne.data.last_updated,
+                    quote           = dataCryptoQuotes
+                };
+
+                return Ok(dataConvert);
             }
             catch (Exception ex)
             {
@@ -102,6 +146,10 @@ namespace ApiRestCoinMarketCap.Controllers
 
         private static string ClearParamsSymbol(string symbol)
         {
+            if(string.IsNullOrEmpty(symbol))
+            {
+                return "";
+            }
             if (symbol.EndsWith(","))
             {
                 symbol = symbol.Remove(symbol.Length - 1);

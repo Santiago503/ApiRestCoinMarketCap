@@ -11,6 +11,12 @@ namespace ApiRestCoinMarketCap.Models
         public Crypto data { get; set; }
     }
 
+    public class CryptoCoinConvertList
+    {
+        public Status status { get; set; }
+        public CryptoDataConvert data { get; set; }
+    }
+
     public class ParamConvertCrypto
     {
         [Required]

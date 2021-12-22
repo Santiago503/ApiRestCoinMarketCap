@@ -26,13 +26,27 @@ namespace ApiRestCoinMarketCap
             public string? name { get; set; }
             public string? symbol { get; set; }
             public string? slug { get; set; }
+            public int? amount { get; set; }
             public DateTime? last_updated { get; set; }
             public Dictionary<string, Currency> quote { get; set; }
+        }
+
+        public class CryptoDataConvert
+        {
+            public int? id { get; set; }
+            public string? name { get; set; }
+            public string? symbol { get; set; }
+            public string? slug { get; set; }
+            public int? amount { get; set; }
+            public DateTime? last_updated { get; set; }
+            public List<Currency> quote { get; set; }
         }
 
 
         public class Currency
         {
+            public string? name { get; set; }
+
             public double? price { get; set; }
             public DateTime? last_updated { get; set; }
         }
