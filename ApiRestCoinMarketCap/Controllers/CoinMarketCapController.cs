@@ -1,5 +1,6 @@
 ﻿using ApiRestCoinMarketCap.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -19,9 +20,12 @@ namespace ApiRestCoinMarketCap.Controllers
     [Route("[controller]")]
     public class CoinMarketCapController : ControllerBase
     {
-        private static readonly string API_KEY = Environment.GetEnvironmentVariable("Api_Key");
-        public CoinMarketCapController()
+        //private static readonly string API_KEY = Environment.GetEnvironmentVariable("Api_Key");
+        public static IConfiguration Configuration { get; private set; }
+
+        public CoinMarketCapController(IConfiguration configuration)
         {
+            Configuration = configuration;
         }
 
         [HttpGet]
@@ -134,6 +138,7 @@ namespace ApiRestCoinMarketCap.Controllers
 
         private static async Task<string> HttpRequest(UriBuilder url, NameValueCollection queryString)
         {
+            string API_KEY = Configuration["API_KEY"].ToString();
             url.Query = queryString.ToString();
 
             var client = new WebClient();
